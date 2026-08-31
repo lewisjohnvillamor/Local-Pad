@@ -544,11 +544,13 @@ code,
   background: none;
 }
 
+/* Note: .ctl already positions these absolutely; never override position
+   here or the control falls out of its layout coordinates. Children with
+   position:absolute still resolve against the control itself. */
 .ctl-stick {
   border-radius: 50%;
   border: 1px solid var(--line-strong);
   background: var(--surface);
-  position: relative;
 }
 .ctl-stick .thumb {
   position: absolute;
@@ -571,7 +573,6 @@ code,
   border: 1px solid var(--line-strong);
   background: var(--surface);
   overflow: hidden;
-  position: relative;
 }
 .ctl-trigger .fill {
   position: absolute;

@@ -22,6 +22,24 @@ Scan the QR code with the phone camera, tap Connect, and the phone becomes
 whatever the active layout says: a touchpad, an air mouse, a GBA pad, a
 steering wheel.
 
+![The LocalPad admin dashboard: QR pairing, server status, paired phones and the layout picker](docs/media/admin-pairing.png)
+
+## Demo
+
+The phone drives the computer in real time; the dashboard mirrors every
+input. Here the dual-stick controller feeds the input monitor, then the
+layout is switched to GBA live from the dashboard:
+
+![Phone controller: dual-stick layout with sticks, d-pad, triggers, then a live switch to the GBA layout](docs/media/demo-controller.gif)
+
+![Dashboard input monitor mirroring the phone: sticks circling, buttons lighting, frame rate and latency](docs/media/demo-dashboard.gif)
+
+<img src="docs/media/demo-touchpad.gif" width="300" alt="Touchpad layout: swiping, tapping, scrolling and clicking, then a live switch to the air mouse layout">
+
+| Touchpad | Dual stick (DSU) | GBA | Air mouse |
+| --- | --- | --- | --- |
+| ![Touchpad layout](docs/media/controller-touchpad.png) | ![Dual-stick layout](docs/media/controller-dualstick.png) | ![GBA layout](docs/media/controller-gba.png) | ![Air mouse layout](docs/media/controller-airmouse.png) |
+
 ## Usage
 
 1. **Start the server** on the computer:
