@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "air-mouse",
+  "name": "Air mouse",
+  "orientation": "portrait",
+  "output": "pointer",
+  "description": "Point the phone like a wand: the gyroscope moves the cursor. Touchpad for fine moves, buttons to click.",
+  "controls": [
+    { "type": "motion", "id": "motion", "label": "Air mouse", "x": 0.5, "y": 0.13, "size": 0.2, "width": 0.92, "height": 0.16 },
+    { "type": "touchpad", "x": 0.46, "y": 0.46, "size": 0.5, "width": 0.84, "height": 0.42 },
+    { "type": "scroll", "x": 0.93, "y": 0.46, "size": 0.4, "width": 0.1, "height": 0.42 },
+    { "type": "button", "id": "click-left", "label": "Left", "x": 0.28, "y": 0.83, "size": 0.18, "width": 0.5, "height": 0.18 },
+    { "type": "button", "id": "click-right", "label": "Right", "x": 0.75, "y": 0.83, "size": 0.18, "width": 0.4, "height": 0.18 }
+  ],
+  "bindings": {
+    "gyro": "mouse",
+    "click-left": "mouse:left",
+    "click-right": "mouse:right"
+  }
+}

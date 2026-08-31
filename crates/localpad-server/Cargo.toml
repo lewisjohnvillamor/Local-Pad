@@ -17,6 +17,7 @@ tracing.workspace = true
 rand.workspace = true
 axum = { version = "0.8", features = ["ws"] }
 axum-server = { version = "0.7", features = ["tls-rustls"] }
+rustls = { version = "0.23", features = ["ring"] }
 tower = "0.5"
 rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 mime_guess = "2"
@@ -37,3 +38,4 @@ localpad-output-windows = { path = "../localpad-output-windows" }
 [dev-dependencies]
 tokio-tungstenite = "0.24"
 futures-util = "0.3"
+ureq = { version = "2", features = ["json"] }

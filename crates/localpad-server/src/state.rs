@@ -25,6 +25,7 @@ pub const SERVER_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Built-in layouts compiled into the binary from /layouts.
 const BUILTIN_LAYOUTS: &[&str] = &[
     include_str!("../../../layouts/touchpad.json"),
+    include_str!("../../../layouts/air-mouse.json"),
     include_str!("../../../layouts/keyboard-trackpad.json"),
     include_str!("../../../layouts/media-remote.json"),
     include_str!("../../../layouts/presentation.json"),
@@ -38,7 +39,7 @@ const BUILTIN_LAYOUTS: &[&str] = &[
 
 /// Events pushed to admin dashboard WebSocket subscribers.
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum AdminEvent {
     /// Something structural changed; the dashboard refetches /api/status.
     Status,
