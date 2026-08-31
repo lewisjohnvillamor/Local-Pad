@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "dolphin",
+  "name": "Dolphin motion (DSU)",
+  "orientation": "landscape",
+  "output": "dsu",
+  "description": "Wii style motion controller for Dolphin over the DSU protocol.",
+  "controls": [
+    { "type": "motion", "id": "motion", "label": "Motion", "x": 0.5, "y": 0.16, "size": 0.2, "width": 0.5, "height": 0.18 },
+    { "type": "dpad", "x": 0.15, "y": 0.5, "size": 0.4 },
+    { "type": "button", "id": "a", "label": "A", "x": 0.85, "y": 0.42, "size": 0.19 },
+    { "type": "button", "id": "b", "label": "B", "x": 0.7, "y": 0.62, "size": 0.15 },
+    { "type": "button", "id": "x", "label": "1", "x": 0.85, "y": 0.78, "size": 0.12 },
+    { "type": "button", "id": "y", "label": "2", "x": 0.95, "y": 0.62, "size": 0.12 },
+    { "type": "button", "id": "select", "label": "Minus", "x": 0.4, "y": 0.88, "size": 0.09 },
+    { "type": "button", "id": "guide", "label": "Home", "x": 0.5, "y": 0.88, "size": 0.09 },
+    { "type": "button", "id": "start", "label": "Plus", "x": 0.6, "y": 0.88, "size": 0.09 },
+    { "type": "trigger", "id": "l2", "label": "Z", "x": 0.12, "y": 0.12, "size": 0.11, "width": 0.12, "height": 0.11 },
+    { "type": "trigger", "id": "r2", "label": "C", "x": 0.28, "y": 0.12, "size": 0.11, "width": 0.12, "height": 0.11 }
+  ],
+  "bindings": {}
+}

@@ -1,0 +1,13 @@
+[package]
+name = "localpad-output-linux"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+localpad-core = { path = "../localpad-core" }
+anyhow.workspace = true
+tracing.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+evdev = "0.12"

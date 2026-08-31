@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "keyboard-trackpad",
+  "name": "Keyboard and trackpad",
+  "orientation": "portrait",
+  "output": "pointer",
+  "description": "Trackpad with the phone keyboard for typing.",
+  "controls": [
+    { "type": "touchpad", "x": 0.5, "y": 0.36, "size": 0.8, "width": 0.94, "height": 0.56 },
+    { "type": "keyboard", "id": "typing", "label": "Type", "x": 0.5, "y": 0.7, "size": 0.12, "width": 0.94, "height": 0.1 },
+    { "type": "button", "id": "click-left", "label": "Left", "x": 0.25, "y": 0.87, "size": 0.16, "width": 0.44, "height": 0.14 },
+    { "type": "button", "id": "click-right", "label": "Right", "x": 0.72, "y": 0.87, "size": 0.16, "width": 0.44, "height": 0.14 }
+  ],
+  "bindings": {
+    "click-left": "mouse:left",
+    "click-right": "mouse:right"
+  }
+}

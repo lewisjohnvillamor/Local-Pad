@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "steering-wheel",
+  "name": "Steering wheel (DSU)",
+  "orientation": "landscape",
+  "output": "dsu",
+  "description": "Tilt the phone to steer; pedals on the triggers.",
+  "controls": [
+    { "type": "motion", "id": "motion", "label": "Steering", "x": 0.5, "y": 0.2, "size": 0.24, "width": 0.56, "height": 0.22 },
+    { "type": "trigger", "id": "l2", "label": "Brake", "x": 0.14, "y": 0.62, "size": 0.34, "width": 0.22, "height": 0.5 },
+    { "type": "trigger", "id": "r2", "label": "Gas", "x": 0.86, "y": 0.62, "size": 0.34, "width": 0.22, "height": 0.5 },
+    { "type": "button", "id": "a", "label": "A", "x": 0.6, "y": 0.66, "size": 0.14 },
+    { "type": "button", "id": "b", "label": "B", "x": 0.42, "y": 0.66, "size": 0.14 },
+    { "type": "button", "id": "start", "label": "Start", "x": 0.5, "y": 0.9, "size": 0.09 }
+  ],
+  "bindings": {
+    "gyro": "steer"
+  }
+}

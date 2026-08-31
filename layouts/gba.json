@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "gba",
+  "name": "GBA",
+  "orientation": "landscape",
+  "output": "keyboard",
+  "description": "Game Boy Advance style pad mapped to emulator defaults.",
+  "controls": [
+    { "type": "dpad", "x": 0.16, "y": 0.55, "size": 0.42 },
+    { "type": "button", "id": "a", "label": "A", "x": 0.88, "y": 0.48, "size": 0.17 },
+    { "type": "button", "id": "b", "label": "B", "x": 0.76, "y": 0.66, "size": 0.17 },
+    { "type": "button", "id": "l1", "label": "L", "x": 0.09, "y": 0.14, "size": 0.13, "width": 0.14, "height": 0.11 },
+    { "type": "button", "id": "r1", "label": "R", "x": 0.91, "y": 0.14, "size": 0.13, "width": 0.14, "height": 0.11 },
+    { "type": "button", "id": "select", "label": "Select", "x": 0.42, "y": 0.88, "size": 0.1, "width": 0.12, "height": 0.09 },
+    { "type": "button", "id": "start", "label": "Start", "x": 0.58, "y": 0.88, "size": 0.1, "width": 0.12, "height": 0.09 }
+  ],
+  "bindings": {
+    "dpad_up": "keyboard:ArrowUp",
+    "dpad_down": "keyboard:ArrowDown",
+    "dpad_left": "keyboard:ArrowLeft",
+    "dpad_right": "keyboard:ArrowRight",
+    "a": "keyboard:KeyX",
+    "b": "keyboard:KeyZ",
+    "l1": "keyboard:KeyA",
+    "r1": "keyboard:KeyS",
+    "start": "keyboard:Enter",
+    "select": "keyboard:Backspace"
+  }
+}

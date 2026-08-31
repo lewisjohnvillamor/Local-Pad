@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "media-remote",
+  "name": "Media remote",
+  "orientation": "portrait",
+  "output": "keyboard",
+  "description": "Playback and volume controls for the computer.",
+  "controls": [
+    { "type": "button", "id": "play", "label": "Play / Pause", "x": 0.5, "y": 0.3, "size": 0.3 },
+    { "type": "button", "id": "prev", "label": "Prev", "x": 0.2, "y": 0.3, "size": 0.16 },
+    { "type": "button", "id": "next", "label": "Next", "x": 0.8, "y": 0.3, "size": 0.16 },
+    { "type": "button", "id": "vol-up", "label": "Vol +", "x": 0.32, "y": 0.62, "size": 0.18 },
+    { "type": "button", "id": "vol-down", "label": "Vol -", "x": 0.68, "y": 0.62, "size": 0.18 },
+    { "type": "button", "id": "mute", "label": "Mute", "x": 0.5, "y": 0.85, "size": 0.15 },
+    { "type": "scroll", "x": 0.93, "y": 0.55, "size": 0.5, "width": 0.1, "height": 0.5 }
+  ],
+  "bindings": {
+    "play": "keyboard:MediaPlayPause",
+    "prev": "keyboard:MediaTrackPrevious",
+    "next": "keyboard:MediaTrackNext",
+    "vol-up": "keyboard:AudioVolumeUp",
+    "vol-down": "keyboard:AudioVolumeDown",
+    "mute": "keyboard:AudioVolumeMute"
+  }
+}

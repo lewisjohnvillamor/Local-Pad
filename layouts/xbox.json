@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "xbox",
+  "name": "Xbox style (keyboard)",
+  "orientation": "landscape",
+  "output": "keyboard",
+  "description": "Controller shape mapped to common PC keyboard defaults; right stick moves the mouse.",
+  "controls": [
+    { "type": "stick", "id": "left", "x": 0.13, "y": 0.42, "size": 0.34 },
+    { "type": "stick", "id": "right", "x": 0.64, "y": 0.72, "size": 0.3 },
+    { "type": "dpad", "x": 0.33, "y": 0.74, "size": 0.3 },
+    { "type": "button", "id": "y", "label": "Y", "x": 0.85, "y": 0.24, "size": 0.13 },
+    { "type": "button", "id": "x", "label": "X", "x": 0.76, "y": 0.4, "size": 0.13 },
+    { "type": "button", "id": "b", "label": "B", "x": 0.94, "y": 0.4, "size": 0.13 },
+    { "type": "button", "id": "a", "label": "A", "x": 0.85, "y": 0.56, "size": 0.13 },
+    { "type": "button", "id": "l1", "label": "LB", "x": 0.09, "y": 0.1, "size": 0.11, "width": 0.13, "height": 0.1 },
+    { "type": "button", "id": "r1", "label": "RB", "x": 0.91, "y": 0.1, "size": 0.11, "width": 0.13, "height": 0.1 },
+    { "type": "trigger", "id": "l2", "label": "LT", "x": 0.22, "y": 0.1, "size": 0.11, "width": 0.1, "height": 0.12 },
+    { "type": "trigger", "id": "r2", "label": "RT", "x": 0.78, "y": 0.1, "size": 0.11, "width": 0.1, "height": 0.12 },
+    { "type": "button", "id": "select", "label": "View", "x": 0.42, "y": 0.32, "size": 0.09 },
+    { "type": "button", "id": "start", "label": "Menu", "x": 0.56, "y": 0.32, "size": 0.09 }
+  ],
+  "bindings": {
+    "left": "stickkeys:KeyW,KeyS,KeyA,KeyD",
+    "right": "stickmouse",
+    "dpad_up": "keyboard:ArrowUp",
+    "dpad_down": "keyboard:ArrowDown",
+    "dpad_left": "keyboard:ArrowLeft",
+    "dpad_right": "keyboard:ArrowRight",
+    "a": "keyboard:Space",
+    "b": "keyboard:KeyC",
+    "x": "keyboard:KeyR",
+    "y": "keyboard:KeyF",
+    "l1": "keyboard:KeyQ",
+    "r1": "keyboard:KeyE",
+    "start": "keyboard:Escape",
+    "select": "keyboard:Tab"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "presentation",
+  "name": "Presentation remote",
+  "orientation": "portrait",
+  "output": "keyboard",
+  "description": "Slide navigation with a blackout key.",
+  "controls": [
+    { "type": "button", "id": "next-slide", "label": "Next", "x": 0.5, "y": 0.3, "size": 0.42, "width": 0.9, "height": 0.34 },
+    { "type": "button", "id": "prev-slide", "label": "Back", "x": 0.5, "y": 0.66, "size": 0.24, "width": 0.9, "height": 0.18 },
+    { "type": "button", "id": "blackout", "label": "Blank screen", "x": 0.28, "y": 0.88, "size": 0.14, "width": 0.44, "height": 0.12 },
+    { "type": "button", "id": "start-show", "label": "Start", "x": 0.74, "y": 0.88, "size": 0.14, "width": 0.44, "height": 0.12 }
+  ],
+  "bindings": {
+    "next-slide": "keyboard:ArrowRight",
+    "prev-slide": "keyboard:ArrowLeft",
+    "blackout": "keyboard:KeyB",
+    "start-show": "keyboard:F5"
+  }
+}

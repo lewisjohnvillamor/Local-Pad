@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "snes",
+  "name": "SNES",
+  "orientation": "landscape",
+  "output": "keyboard",
+  "description": "Super Nintendo style pad mapped to emulator defaults.",
+  "controls": [
+    { "type": "dpad", "x": 0.15, "y": 0.55, "size": 0.42 },
+    { "type": "button", "id": "x", "label": "X", "x": 0.83, "y": 0.36, "size": 0.14 },
+    { "type": "button", "id": "y", "label": "Y", "x": 0.72, "y": 0.54, "size": 0.14 },
+    { "type": "button", "id": "a", "label": "A", "x": 0.94, "y": 0.54, "size": 0.14 },
+    { "type": "button", "id": "b", "label": "B", "x": 0.83, "y": 0.72, "size": 0.14 },
+    { "type": "button", "id": "l1", "label": "L", "x": 0.09, "y": 0.13, "size": 0.13, "width": 0.14, "height": 0.11 },
+    { "type": "button", "id": "r1", "label": "R", "x": 0.91, "y": 0.13, "size": 0.13, "width": 0.14, "height": 0.11 },
+    { "type": "button", "id": "select", "label": "Select", "x": 0.42, "y": 0.88, "size": 0.1, "width": 0.12, "height": 0.09 },
+    { "type": "button", "id": "start", "label": "Start", "x": 0.58, "y": 0.88, "size": 0.1, "width": 0.12, "height": 0.09 }
+  ],
+  "bindings": {
+    "dpad_up": "keyboard:ArrowUp",
+    "dpad_down": "keyboard:ArrowDown",
+    "dpad_left": "keyboard:ArrowLeft",
+    "dpad_right": "keyboard:ArrowRight",
+    "a": "keyboard:KeyX",
+    "b": "keyboard:KeyZ",
+    "x": "keyboard:KeyS",
+    "y": "keyboard:KeyA",
+    "l1": "keyboard:KeyQ",
+    "r1": "keyboard:KeyW",
+    "start": "keyboard:Enter",
+    "select": "keyboard:Backspace"
+  }
+}

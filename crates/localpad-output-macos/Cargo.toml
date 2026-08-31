@@ -1,0 +1,13 @@
+[package]
+name = "localpad-output-macos"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+localpad-core = { path = "../localpad-core" }
+anyhow.workspace = true
+tracing.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+enigo = "0.6"

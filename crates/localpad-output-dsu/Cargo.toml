@@ -1,0 +1,12 @@
+[package]
+name = "localpad-output-dsu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+localpad-core = { path = "../localpad-core" }
+anyhow.workspace = true
+tracing.workspace = true
+rand.workspace = true
+crc32fast = "1"

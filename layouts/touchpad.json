@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "touchpad",
+  "name": "Touchpad",
+  "orientation": "portrait",
+  "output": "pointer",
+  "description": "Relative pointer surface with scroll strip and click buttons.",
+  "controls": [
+    { "type": "touchpad", "x": 0.44, "y": 0.42, "size": 0.8, "width": 0.82, "height": 0.66 },
+    { "type": "scroll", "x": 0.93, "y": 0.42, "size": 0.6, "width": 0.1, "height": 0.66 },
+    { "type": "button", "id": "click-left", "label": "Left", "x": 0.25, "y": 0.87, "size": 0.16, "width": 0.42, "height": 0.14 },
+    { "type": "button", "id": "click-right", "label": "Right", "x": 0.72, "y": 0.87, "size": 0.16, "width": 0.42, "height": 0.14 }
+  ],
+  "bindings": {
+    "click-left": "mouse:left",
+    "click-right": "mouse:right"
+  }
+}
