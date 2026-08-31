@@ -19,7 +19,56 @@ Waiting for a controller... press Ctrl-C to stop.
 ```
 
 Scan the QR code with the phone camera, tap Connect, and the phone becomes
-whatever the active layout says: a touchpad, a GBA pad, a steering wheel.
+whatever the active layout says: a touchpad, an air mouse, a GBA pad, a
+steering wheel.
+
+## Usage
+
+1. **Start the server** on the computer:
+
+   ```
+   localpad serve
+   ```
+
+   The admin dashboard opens in your browser. Add `--no-open` to skip
+   that, `--profile gba` to start on a different layout, or
+   `--require-approval` if you want to confirm every phone on the
+   dashboard before it can control anything.
+
+2. **Connect the phone.** Scan the QR code with the phone camera (it
+   carries a single-use secret), or open the controller URL and type the
+   six digit code from the dashboard. Both expire after five minutes;
+   click "New code" for a fresh one.
+
+3. **Pick a layout.** Change it any time from the dashboard's layout
+   grid; the phone switches instantly. `localpad profiles` lists them
+   from the terminal.
+
+4. **Trackpad gestures:** move with one finger, tap to click, two-finger
+   drag to scroll, two-finger tap for right click, double-tap and hold to
+   drag. The keyboard layout adds a "tap to type" strip that uses the
+   phone's own keyboard.
+
+5. **Motion layouts** (air mouse, Dolphin, steering wheel) need one
+   extra step the first time: install the LocalPad certificate on the
+   phone via the linked `/setup` page, then tap "Enable motion" when the
+   layout asks. "Recenter" makes wherever you are pointing the neutral
+   pose.
+
+6. **Stop everything** with Ctrl-C, the dashboard's "Stop server"
+   button, or `localpad stop`. Every held key, button and axis is
+   released on disconnect, timeout or shutdown.
+
+### Using the phone as an air mouse
+
+Select the **Air mouse** profile: turning and tilting the phone moves the
+cursor like a laser pointer, driven by the gyroscope's angular velocity
+with a dead zone and smoothing so a resting hand does not drift. The same
+screen keeps a touchpad for fine positioning, a scroll strip, and left
+and right click buttons. Gyro aiming is also available inside other
+layouts through the `gyro` binding: `"gyro": "mouse"` (pointer),
+`"gyro": "right_stick"` (stick aim), `"gyro": "steer"` (steering axis)
+or `"gyro": "dsu"` (raw calibrated motion for emulators).
 
 ## How it works
 
@@ -78,6 +127,7 @@ permission on macOS).
 | id | output | notes |
 | --- | --- | --- |
 | `touchpad` | pointer | tap to click, two-finger scroll, double-tap drag |
+| `air-mouse` | pointer | gyro moves the cursor; touchpad and buttons included |
 | `keyboard-trackpad` | pointer | trackpad plus the phone keyboard |
 | `media-remote` | keyboard | play/pause, tracks, volume |
 | `presentation` | keyboard | next/back, blank screen, start show |
@@ -150,3 +200,13 @@ editor, signed installers and background service installation. On macOS,
 gamepad-shaped layouts are keyboard mappings or DSU; a native virtual HID
 controller depends on Apple's restricted entitlement and is intentionally
 out of scope for now.
+
+## License
+
+Apache License 2.0. Copyright 2026 Lewis John Villamor. See
+[LICENSE](LICENSE) for the full text.
+
+## Support
+
+If LocalPad is useful to you, you can
+[buy me a coffee](https://www.paypal.com/paypalme/lewisjohnvillamor/250).

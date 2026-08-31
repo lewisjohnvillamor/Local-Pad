@@ -451,6 +451,34 @@ mod tests {
     }
 
     #[test]
+    fn gyro_mouse_binding_moves_the_pointer() {
+        let layout: Layout = serde_json::from_value(serde_json::json!({
+            "schemaVersion": LAYOUT_SCHEMA_VERSION,
+            "id": "air-mouse",
+            "name": "Air mouse",
+            "orientation": "portrait",
+            "output": "pointer",
+            "controls": [],
+            "bindings": { "gyro": "mouse" }
+        }))
+        .unwrap();
+        let mut engine = MappingEngine::new(&layout);
+        let mut f = InputFrame::default();
+        f.orientation = Some([0.0, 0.0, 0.0, 1.0]);
+        // Turning right (yaw) at 90 deg/s should move the pointer left of
+        // zero on x per our inversion convention, and only after smoothing
+        // has something to follow.
+        f.angular_velocity = Some([0.0, 90.0, 0.0]);
+        let (out, _) = engine.process_frame(&f, 0.016);
+        assert!(out.mouse_delta[0] < 0.0, "yaw must drive x, got {:?}", out.mouse_delta);
+        assert_eq!(out.mouse_delta[1], 0.0);
+
+        // Without motion data the pointer holds still.
+        let (out, _) = engine.process_frame(&InputFrame::default(), 0.016);
+        assert_eq!(out.mouse_delta, [0.0, 0.0]);
+    }
+
+    #[test]
     fn duplicate_key_press_from_two_sources_releases_once() {
         let mut engine = MappingEngine::new(&keyboard_layout());
         let events = engine.process_key(Key::new("KeyQ").unwrap(), true);
