@@ -54,6 +54,10 @@ impl RunningServer {
 
 /// Start both listeners, mDNS and the pairing session, without blocking.
 pub async fn start(config: ServerConfig) -> anyhow::Result<RunningServer> {
+    // Pick a rustls crypto provider explicitly; multiple providers can be
+    // linked in and rustls refuses to guess. Harmless if already installed.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     let state = Arc::new(AppState::new(config).await?);
 
     // Admin listener: loopback only, plain HTTP.

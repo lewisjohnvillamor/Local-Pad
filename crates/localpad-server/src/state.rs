@@ -38,7 +38,7 @@ const BUILTIN_LAYOUTS: &[&str] = &[
 
 /// Events pushed to admin dashboard WebSocket subscribers.
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum AdminEvent {
     /// Something structural changed; the dashboard refetches /api/status.
     Status,
