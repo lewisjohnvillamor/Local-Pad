@@ -22,26 +22,14 @@ fn create_platform_output(disabled: bool) -> (Box<dyn InputOutput>, Option<Strin
             Some("native output disabled with --no-native-output".to_string()),
         );
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     {
-        match localpad_output_macos::MacCoreGraphicsOutput::new() {
+        match localpad_output_enigo::EnigoOutput::new() {
             Ok(out) => return (Box::new(out), None),
             Err(e) => {
                 return (
                     Box::new(NullOutput::default()),
-                    Some(format!("macOS output unavailable: {e:#}")),
-                )
-            }
-        }
-    }
-    #[cfg(target_os = "windows")]
-    {
-        match localpad_output_windows::WindowsSendInputOutput::new() {
-            Ok(out) => return (Box::new(out), None),
-            Err(e) => {
-                return (
-                    Box::new(NullOutput::default()),
-                    Some(format!("Windows output unavailable: {e:#}")),
+                    Some(format!("native output unavailable: {e:#}")),
                 )
             }
         }

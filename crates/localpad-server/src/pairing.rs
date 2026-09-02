@@ -102,10 +102,11 @@ impl PairingState {
 
     fn rate_limited(&mut self, ip: IpAddr) -> bool {
         let now = Instant::now();
+        // Expired windows are dropped wholesale so the map cannot grow
+        // without bound on a long-running server.
+        self.attempts
+            .retain(|_, (start, _)| now.duration_since(*start) <= RATE_WINDOW);
         let entry = self.attempts.entry(ip).or_insert((now, 0));
-        if now.duration_since(entry.0) > RATE_WINDOW {
-            *entry = (now, 0);
-        }
         entry.1 += 1;
         entry.1 > MAX_ATTEMPTS_PER_WINDOW
     }

@@ -6,8 +6,7 @@ members = [
     "crates/localpad-server",
     "crates/localpad-output-dsu",
     "crates/localpad-output-linux",
-    "crates/localpad-output-macos",
-    "crates/localpad-output-windows",
+    "crates/localpad-output-enigo",
 ]
 
 [workspace.package]
@@ -21,7 +20,15 @@ anyhow = "1"
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "time",
+    "sync",
+    "signal",
+    "io-util",
+] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 rand = "0.9"

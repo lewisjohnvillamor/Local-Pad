@@ -32,11 +32,13 @@ fn rand_suffix() -> u64 {
 }
 
 async fn pair(server: &localpad_server::RunningServer) -> (String, String) {
+    pair_named(server, "Test phone").await
+}
+
+async fn pair_named(server: &localpad_server::RunningServer, name: &str) -> (String, String) {
     let display = server.state.new_pairing("http://test/controller").await;
     let addr = server.controller_addr;
-    let client = std::sync::Arc::new(());
-    let _ = client;
-    let body = serde_json::json!({ "code": display.code, "deviceName": "Test phone" });
+    let body = serde_json::json!({ "code": display.code, "deviceName": name });
     let response = tokio::task::spawn_blocking(move || {
         ureq::post(&format!("http://{addr}/api/pair"))
             .send_json(body)
@@ -94,6 +96,9 @@ async fn pair_connect_input_disconnect() {
     assert_eq!(welcome["deviceId"], device_id.as_str());
     assert_eq!(welcome["layout"]["id"], "touchpad");
     assert!(welcome["heartbeatIntervalMs"].is_number(), "field casing");
+    let listed = welcome["layouts"].as_array().expect("welcome lists layouts");
+    assert!(listed.len() >= 10);
+    assert!(listed.iter().any(|l| l["id"] == "air-mouse"));
 
     // Device shows as connected.
     let devices = server.state.sessions.lock().unwrap().summaries();
@@ -147,8 +152,8 @@ async fn bad_token_is_rejected() {
 #[tokio::test]
 async fn second_device_is_busy() {
     let server = start_test_server().await;
-    let (token_a, _) = pair(&server).await;
-    let (token_b, _) = pair(&server).await;
+    let (token_a, _) = pair_named(&server, "First phone").await;
+    let (token_b, _) = pair_named(&server, "Second phone").await;
 
     let mut first = connect_ws(&server, &token_a).await;
     let welcome = next_json(&mut first).await;

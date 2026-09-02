@@ -20,19 +20,34 @@ interface Approval {
 
 export function AdminApp() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
+  const [statusAt, setStatusAt] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [layouts, setLayouts] = useState<Layout[]>([]);
   const [monitor, setMonitor] = useState<MonitorSnapshot | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [connected, setConnected] = useState(false);
   const [qrBust, setQrBust] = useState(0);
+  const [qrZoom, setQrZoom] = useState(false);
+  const [dismissed, setDismissed] = useState<string[]>([]);
   const toastId = useRef(0);
 
   const refetch = useCallback(() => {
-    apiGet<StatusResponse>("/api/status").then(setStatus).catch(() => {});
+    apiGet<StatusResponse>("/api/status")
+      .then((s) => {
+        setStatus(s);
+        setStatusAt(Date.now());
+      })
+      .catch(() => {});
     apiGet<{ layouts: Layout[] }>("/api/layouts")
       .then((r) => setLayouts(r.layouts))
       .catch(() => {});
+  }, []);
+
+  // Local clock so the pairing countdown and uptime tick between events.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const pushToast = useCallback((message: string) => {
@@ -108,16 +123,29 @@ export function AdminApp() {
   }
 
   const activeDevice = status.devices.find((d) => d.connected) ?? null;
+  const elapsedSecs = Math.max(0, Math.floor((now - statusAt) / 1000));
+  const pairingLeft = status.pairing
+    ? Math.max(0, status.pairing.expiresInSecs - elapsedSecs)
+    : 0;
 
   return (
     <div className="admin">
       <Header connected={connected} phone={activeDevice?.name ?? null} />
 
-      {status.warnings.map((w) => (
-        <div className="warning-banner" key={w}>
-          {w}
-        </div>
-      ))}
+      {status.warnings
+        .filter((w) => !dismissed.includes(w))
+        .map((w) => (
+          <div className="warning-banner" key={w}>
+            <span style={{ flex: 1 }}>{w}</span>
+            <button
+              aria-label="Dismiss warning"
+              style={{ color: "var(--text-dim)", padding: "0 0.3rem" }}
+              onClick={() => setDismissed((d) => [...d, w])}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
 
       {approvals.map((a) => (
         <div className="approval-banner" key={a.requestId}>
@@ -136,7 +164,13 @@ export function AdminApp() {
       <div className="admin-grid">
         <section className="card span-5">
           <h2>Pair a phone</h2>
-          <PairingCard status={status} qrBust={qrBust} onNew={() => setQrBust((n) => n + 1)} />
+          <PairingCard
+            status={status}
+            qrBust={qrBust}
+            secondsLeft={pairingLeft}
+            onNew={() => setQrBust((n) => n + 1)}
+            onZoom={() => setQrZoom(true)}
+          />
         </section>
 
         <section className="card span-7">
@@ -160,7 +194,7 @@ export function AdminApp() {
                 : ""}
             </dd>
             <dt>Uptime</dt>
-            <dd>{formatUptime(status.uptimeSecs)}</dd>
+            <dd>{formatUptime(status.uptimeSecs + elapsedSecs)}</dd>
           </dl>
           <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem", flexWrap: "wrap" }}>
             <button
@@ -238,6 +272,20 @@ export function AdminApp() {
         </section>
       </div>
 
+      {qrZoom && status.pairing && (
+        <div
+          className="overlay"
+          style={{ background: "rgba(10, 12, 11, 0.85)", cursor: "zoom-out" }}
+          onClick={() => setQrZoom(false)}
+        >
+          <img
+            src={`/api/qr.svg?v=${qrBust}`}
+            alt="Pairing QR code, enlarged"
+            style={{ width: "min(80vmin, 480px)", borderRadius: 12, background: "#f4f6f4" }}
+          />
+        </div>
+      )}
+
       <div className="toast-stack">
         {toasts.map((t) => (
           <div className="toast" key={t.id}>
@@ -282,49 +330,56 @@ function Header({ connected, phone }: { connected: boolean; phone?: string | nul
 function PairingCard({
   status,
   qrBust,
+  secondsLeft,
   onNew,
+  onZoom,
 }: {
   status: StatusResponse;
   qrBust: number;
+  secondsLeft: number;
   onNew: () => void;
+  onZoom: () => void;
 }) {
-  if (!status.pairing) {
+  const newCode = async () => {
+    await apiPost("/api/pairing/new").catch(() => {});
+    onNew();
+  };
+  if (!status.pairing || secondsLeft <= 0) {
     return (
       <div>
         <p style={{ color: "var(--text-dim)", marginTop: 0 }}>
-          No pairing code is active. Create one to add a phone.
+          {status.pairing
+            ? "The pairing code expired."
+            : "No pairing code is active."}{" "}
+          Create one to add a phone.
         </p>
-        <button
-          className="btn primary"
-          onClick={async () => {
-            await apiPost("/api/pairing/new").catch(() => {});
-            onNew();
-          }}
-        >
+        <button className="btn primary" onClick={newCode}>
           New pairing code
         </button>
       </div>
     );
   }
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = String(secondsLeft % 60).padStart(2, "0");
   return (
     <div>
       <div className="qr-wrap">
-        <img src={`/api/qr.svg?v=${qrBust}`} alt="Pairing QR code" />
+        <button
+          aria-label="Enlarge the QR code"
+          style={{ cursor: "zoom-in", display: "block" }}
+          onClick={onZoom}
+        >
+          <img src={`/api/qr.svg?v=${qrBust}`} alt="Pairing QR code" />
+        </button>
         <div>
           <p style={{ margin: "0 0 0.3rem", color: "var(--text-dim)", fontSize: "0.88rem" }}>
             Scan with the phone camera, or open the controller URL and type:
           </p>
           <div className="pairing-code">{status.pairing.code}</div>
           <p style={{ color: "var(--text-faint)", fontSize: "0.8rem" }}>
-            Expires in {Math.max(1, Math.round(status.pairing.expiresInSecs / 60))} min. One use.
+            Expires in {minutes}:{seconds}. One use. Click the QR to enlarge.
           </p>
-          <button
-            className="btn"
-            onClick={async () => {
-              await apiPost("/api/pairing/new").catch(() => {});
-              onNew();
-            }}
-          >
+          <button className="btn" onClick={newCode}>
             New code
           </button>
         </div>

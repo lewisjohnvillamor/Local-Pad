@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "air-mouse",
   "name": "Air mouse",
-  "orientation": "portrait",
+  "orientation": "any",
   "output": "pointer",
   "description": "Point the phone like a wand: the gyroscope moves the cursor. Touchpad for fine moves, buttons to click.",
   "controls": [

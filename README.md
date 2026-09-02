@@ -58,9 +58,10 @@ layout is switched to GBA live from the dashboard:
    six digit code from the dashboard. Both expire after five minutes;
    click "New code" for a fresh one.
 
-3. **Pick a layout.** Change it any time from the dashboard's layout
-   grid; the phone switches instantly. `localpad profiles` lists them
-   from the terminal.
+3. **Pick a layout.** Tap "Layouts" on the phone or use the dashboard's
+   layout grid; either side switches instantly. The phone's gear button
+   holds pointer speed, scroll speed, scroll direction and vibration
+   preferences. `localpad profiles` lists layouts from the terminal.
 
 4. **Trackpad gestures:** move with one finger, tap to click, two-finger
    drag to scroll, two-finger tap for right click, double-tap and hold to
@@ -199,10 +200,12 @@ arrive as a full-gyro DSU pad.
 ## Repository layout
 
 ```
-crates/localpad-core       input model, layouts, mapping, motion, output trait
-crates/localpad-server     axum listeners, pairing, sessions, TLS, mDNS
-crates/localpad-cli        the `localpad` binary
-crates/localpad-output-*   platform adapters (macOS, Windows, Linux, DSU)
+crates/localpad-core          input model, layouts, mapping, motion, output trait
+crates/localpad-server        axum listeners, pairing, sessions, TLS, mDNS
+crates/localpad-cli           the `localpad` binary
+crates/localpad-output-enigo  macOS (CoreGraphics) and Windows (SendInput) output
+crates/localpad-output-linux  Linux uinput output
+crates/localpad-output-dsu    DSU (CemuHook) motion server
 web/                       React dashboard + controller (Vite, embedded at build)
 layouts/                   built-in controller layouts (JSON, schema v1)
 ```
