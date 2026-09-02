@@ -24,6 +24,21 @@ steering wheel.
 
 ![The LocalPad admin dashboard: QR pairing, server status, paired phones and the layout picker](docs/media/admin-pairing.png)
 
+## Features
+
+- Phone as trackpad, keyboard, media and presentation remote, gamepad or motion controller
+- One command, zero installs on the phone: everything runs in the browser
+- QR pairing with single-use codes; local network only, no cloud, no accounts
+- Eleven built-in layouts, plus importable custom JSON layouts
+- Air mouse: point the phone like a wand to move the cursor
+- DSU (CemuHook) motion streaming for Dolphin and other emulators
+- Live dashboard with input monitor, latency, device list and one-tap emergency release
+- Switch layouts instantly from the phone or the dashboard
+- Per-device settings: pointer speed, scroll speed and direction, vibration
+- HTTPS out of the box through a private local certificate authority
+- Every held key and button is released on disconnect, timeout or shutdown
+- One small Rust binary for macOS, Windows and Linux; open source under Apache 2.0
+
 ## Demo
 
 The phone drives the computer in real time; the dashboard mirrors every
