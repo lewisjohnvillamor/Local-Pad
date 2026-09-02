@@ -61,12 +61,20 @@ export type ClientMessage =
   | { type: "setLayout"; id: string }
   | { type: "bye" };
 
+export interface LayoutSummary {
+  id: string;
+  name: string;
+  orientation: "landscape" | "portrait" | "any";
+  output: "pointer" | "keyboard" | "dsu" | "gamepad";
+}
+
 export type ServerMessage =
   | {
       type: "welcome";
       deviceId: string;
       deviceName: string;
       layout: Layout;
+      layouts: LayoutSummary[];
       serverVersion: string;
       heartbeatIntervalMs: number;
     }

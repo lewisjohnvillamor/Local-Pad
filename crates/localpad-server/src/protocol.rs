@@ -2,8 +2,19 @@
 //! TypeScript mirror lives in web/src/protocol/messages.ts.
 
 use localpad_core::frame::InputFrame;
-use localpad_core::layout::Layout;
+use localpad_core::layout::{Layout, Orientation, OutputMode};
 use serde::{Deserialize, Serialize};
+
+/// Compact layout listing sent in Welcome so the phone can offer its own
+/// layout picker without another round trip.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LayoutSummary {
+    pub id: String,
+    pub name: String,
+    pub orientation: Orientation,
+    pub output: OutputMode,
+}
 
 /// Messages the phone may send. Anything that fails to parse is dropped;
 /// repeated garbage closes the connection.
@@ -30,6 +41,7 @@ pub enum ServerMessage {
         device_id: String,
         device_name: String,
         layout: Layout,
+        layouts: Vec<LayoutSummary>,
         server_version: String,
         heartbeat_interval_ms: u64,
     },

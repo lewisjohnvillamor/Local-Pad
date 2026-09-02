@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "@fontsource-variable/outfit";
-import "@fontsource/geist-mono/400.css";
-import "@fontsource/geist-mono/500.css";
+// Latin-only subsets: the UI has no Cyrillic or Vietnamese copy, and the
+// extra subsets would bloat the embedded bundle.
+import "@fontsource/geist-mono/latin-400.css";
+import "@fontsource/geist-mono/latin-500.css";
 import "./styles.css";
 import { AdminApp } from "./admin/AdminApp";
 import { ControllerApp } from "./controller/ControllerApp";

@@ -1301,31 +1301,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "localpad-output-enigo"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "enigo",
+ "localpad-core",
+ "tracing",
+]
+
+[[package]]
 name = "localpad-output-linux"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "evdev",
- "localpad-core",
- "tracing",
-]
-
-[[package]]
-name = "localpad-output-macos"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "enigo",
- "localpad-core",
- "tracing",
-]
-
-[[package]]
-name = "localpad-output-windows"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "enigo",
  "localpad-core",
  "tracing",
 ]
@@ -1343,9 +1333,8 @@ dependencies = [
  "local-ip-address",
  "localpad-core",
  "localpad-output-dsu",
+ "localpad-output-enigo",
  "localpad-output-linux",
- "localpad-output-macos",
- "localpad-output-windows",
  "mdns-sd",
  "mime_guess",
  "qrcode",
@@ -2397,7 +2386,6 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.5",

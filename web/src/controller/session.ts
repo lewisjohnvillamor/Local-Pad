@@ -2,9 +2,21 @@
 // lock and lifecycle handling. React components mutate the input state and
 // subscribe to connection changes.
 
-import type { ClientMessage, InputFrame, Layout, ServerMessage } from "../protocol/messages";
+import type {
+  ClientMessage,
+  InputFrame,
+  Layout,
+  LayoutSummary,
+  ServerMessage,
+} from "../protocol/messages";
 import { PROTOCOL_VERSION } from "../protocol/messages";
 import { MotionCapture, requestMotionPermission } from "./motion";
+import {
+  ControllerSettings,
+  deviceUid,
+  loadSettings,
+  saveSettings,
+} from "./settings";
 
 export type Phase =
   | "needs-pairing"
@@ -17,11 +29,13 @@ export type Phase =
 export interface SessionView {
   phase: Phase;
   layout: Layout | null;
+  layouts: LayoutSummary[];
   deviceName: string;
   latencyMs: number | null;
   motionOn: boolean;
   error: string | null;
   paused: boolean;
+  settings: ControllerSettings;
 }
 
 const TOKEN_KEY = "localpad-token";
@@ -49,11 +63,13 @@ export class ControllerSession {
   private view: SessionView = {
     phase: "needs-pairing",
     layout: null,
+    layouts: [],
     deviceName: guessDeviceName(),
     latencyMs: null,
     motionOn: false,
     error: null,
     paused: false,
+    settings: loadSettings(),
   };
   private listeners = new Set<() => void>();
   private socket: WebSocket | null = null;
@@ -92,13 +108,37 @@ export class ControllerSession {
   }
 
   addPointer(dx: number, dy: number) {
-    this.pointerAccum[0] += dx;
-    this.pointerAccum[1] += dy;
+    const gain = this.view.settings.pointerSpeed;
+    this.pointerAccum[0] += dx * gain;
+    this.pointerAccum[1] += dy * gain;
   }
 
   addScroll(dx: number, dy: number) {
-    this.scrollAccum[0] += dx;
-    this.scrollAccum[1] += dy;
+    const s = this.view.settings;
+    const gain = s.scrollSpeed * (s.naturalScroll ? 1 : -1);
+    this.scrollAccum[0] += dx * gain;
+    this.scrollAccum[1] += dy * gain;
+  }
+
+  updateSettings(partial: Partial<ControllerSettings>) {
+    const settings = { ...this.view.settings, ...partial };
+    saveSettings(settings);
+    this.update({ settings });
+  }
+
+  /** Short vibration on press transitions, when enabled and supported. */
+  haptic() {
+    if (this.view.settings.haptics && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(8);
+      } catch {
+        // Some browsers throw without a user gesture; ignore.
+      }
+    }
+  }
+
+  requestLayout(id: string) {
+    this.send({ type: "setLayout", id });
   }
 
   sendKey(code: string, down: boolean) {
@@ -161,7 +201,11 @@ export class ControllerSession {
       const response = await fetch("/api/pair", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, deviceName: this.view.deviceName }),
+        body: JSON.stringify({
+          code,
+          deviceName: this.view.deviceName,
+          deviceUid: deviceUid(),
+        }),
       });
       if (!response.ok) {
         const message =
@@ -236,6 +280,7 @@ export class ControllerSession {
           this.update({
             phase: "connected",
             layout: message.layout,
+            layouts: message.layouts,
             deviceName: message.deviceName,
             error: null,
           });

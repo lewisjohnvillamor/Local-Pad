@@ -1,9 +1,11 @@
-//! Windows mouse and keyboard output through SendInput (via the enigo
-//! bindings). The virtual Xbox 360 controller backend (ViGEm) is planned
-//! for the next release and will live behind this same crate boundary.
+//! Mouse and keyboard output for macOS (CoreGraphics events) and Windows
+//! (SendInput), both through the enigo bindings. On macOS the process
+//! needs the Accessibility permission; `localpad doctor` explains the
+//! setup. The Windows virtual Xbox 360 backend (ViGEm) is planned for a
+//! later release behind the same output trait.
 
-#[cfg(target_os = "windows")]
-mod win_impl {
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+mod enigo_impl {
     use anyhow::Context;
     use enigo::{
         Axis, Button, Coordinate, Direction, Enigo, Key as EKey, Keyboard, Mouse, Settings,
@@ -12,6 +14,11 @@ mod win_impl {
     use localpad_core::mapping::{OutputEvent, OutputFrame};
     use localpad_core::output::{InputOutput, OutputCapabilities};
     use std::collections::HashSet;
+
+    #[cfg(target_os = "macos")]
+    const BACKEND_NAME: &str = "macOS CoreGraphics";
+    #[cfg(target_os = "windows")]
+    const BACKEND_NAME: &str = "Windows SendInput";
 
     /// Map a W3C KeyboardEvent.code to an enigo key. Letters and digits go
     /// through Unicode so the user's keyboard layout applies.
@@ -75,19 +82,26 @@ mod win_impl {
         }
     }
 
-    pub struct WindowsSendInputOutput {
+    pub struct EnigoOutput {
         enigo: Enigo,
+        /// Fractional movement carried between frames so slow, fine motion
+        /// is not lost to integer truncation.
         pointer_carry: [f32; 2],
         scroll_carry: [f32; 2],
         held_keys: HashSet<String>,
         held_buttons: HashSet<MouseButton>,
     }
 
-    impl WindowsSendInputOutput {
+    impl EnigoOutput {
         pub fn new() -> anyhow::Result<Self> {
-            let enigo = Enigo::new(&Settings::default())
-                .context("could not initialize the SendInput event source")?;
-            Ok(WindowsSendInputOutput {
+            #[cfg(target_os = "macos")]
+            let context_hint = "could not create the CoreGraphics event source; \
+                 grant LocalPad the Accessibility permission in \
+                 System Settings, Privacy & Security, Accessibility";
+            #[cfg(target_os = "windows")]
+            let context_hint = "could not initialize the SendInput event source";
+            let enigo = Enigo::new(&Settings::default()).context(context_hint)?;
+            Ok(EnigoOutput {
                 enigo,
                 pointer_carry: [0.0; 2],
                 scroll_carry: [0.0; 2],
@@ -97,7 +111,7 @@ mod win_impl {
         }
     }
 
-    impl InputOutput for WindowsSendInputOutput {
+    impl InputOutput for EnigoOutput {
         fn apply_frame(&mut self, frame: &OutputFrame) -> anyhow::Result<()> {
             self.pointer_carry[0] += frame.mouse_delta[0];
             self.pointer_carry[1] += frame.mouse_delta[1];
@@ -109,6 +123,7 @@ mod win_impl {
                 self.enigo
                     .move_mouse(dx as i32, dy as i32, Coordinate::Rel)?;
             }
+            // Browsers report scroll in pixels; a wheel line is ~40 px.
             self.scroll_carry[0] += frame.scroll_delta[0] / 40.0;
             self.scroll_carry[1] += frame.scroll_delta[1] / 40.0;
             let sx = self.scroll_carry[0].trunc();
@@ -138,7 +153,7 @@ mod win_impl {
                                 self.held_keys.remove(code);
                             }
                         }
-                        None => tracing::debug!(code, "no Windows mapping for key"),
+                        None => tracing::debug!(code, "no native mapping for key"),
                     }
                 }
                 OutputEvent::MouseButton { button, down } => {
@@ -176,11 +191,11 @@ mod win_impl {
                 keyboard: true,
                 gamepad: false,
                 motion: false,
-                name: "Windows SendInput",
+                name: BACKEND_NAME,
             }
         }
     }
 }
 
-#[cfg(target_os = "windows")]
-pub use win_impl::WindowsSendInputOutput;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+pub use enigo_impl::EnigoOutput;

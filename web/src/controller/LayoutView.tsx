@@ -145,6 +145,7 @@ function ButtonControl({
 
   const set = (down: boolean) => {
     setPressed(down);
+    if (down) session.haptic();
     switch (action.kind) {
       case "bit":
         session.setButton(action.bit, down);
@@ -184,6 +185,7 @@ function DpadControl({ box, session }: { box: Box; session: ControllerSession })
   const ref = useRef<HTMLDivElement>(null);
 
   const apply = (next: number) => {
+    if (next !== bits && next !== 0) session.haptic();
     setBits(next);
     session.setDpadBits(DPAD_MASK, next);
   };
@@ -295,6 +297,7 @@ function StickControl({
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         setEngaged(true);
+        session.haptic();
         fromPoint(e.clientX, e.clientY);
       }}
       onPointerMove={(e) => {
@@ -334,6 +337,7 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
   const pointers = useRef(new Map<number, TrackedPointer>());
   const lastTapAt = useRef(0);
   const dragging = useRef(false);
+  const [dragActive, setDragActive] = useState(false);
   const twoFingerTapCandidate = useRef(false);
 
   const onDown = (e: React.PointerEvent) => {
@@ -350,6 +354,8 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
       // A touch shortly after a tap starts a drag with the button held.
       if (performance.now() - lastTapAt.current < 300) {
         dragging.current = true;
+        setDragActive(true);
+        session.haptic();
         session.sendMouseButton("left", true);
       }
     }
@@ -389,6 +395,7 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
     if (cancelled) {
       if (dragging.current && pointers.current.size === 0) {
         dragging.current = false;
+        setDragActive(false);
         session.sendMouseButton("left", false);
       }
       return;
@@ -396,6 +403,7 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
     if (pointers.current.size === 0) {
       if (dragging.current) {
         dragging.current = false;
+        setDragActive(false);
         session.sendMouseButton("left", false);
       } else if (!tracked.moved && duration < 250) {
         if (twoFingerTapCandidate.current) {
@@ -411,7 +419,7 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
 
   return (
     <div
-      className="ctl ctl-touchpad control-surface"
+      className={`ctl ctl-touchpad control-surface ${dragActive ? "dragging" : ""}`}
       style={boxStyle(box)}
       onPointerDown={onDown}
       onPointerMove={onMove}
@@ -419,7 +427,11 @@ function TouchpadControl({ box, session }: { box: Box; session: ControllerSessio
       onPointerCancel={(e) => endPointer(e, true)}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <span className="hint">tap: click. two fingers: scroll. double tap: drag</span>
+      <span className="hint">
+        {dragActive
+          ? "dragging: lift to drop"
+          : "tap: click. two fingers: scroll. double tap: drag"}
+      </span>
     </div>
   );
 }
@@ -487,6 +499,7 @@ function TriggerControl({
       style={boxStyle(box)}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
+        session.haptic();
         fromPoint(e.clientY);
       }}
       onPointerMove={(e) => {

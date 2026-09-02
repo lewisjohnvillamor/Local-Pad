@@ -86,6 +86,23 @@ struct PairRequest {
     code: String,
     #[serde(default)]
     device_name: Option<String>,
+    /// Stable per-phone identifier so re-pairing replaces the device.
+    #[serde(default)]
+    device_uid: Option<String>,
+}
+
+fn clean_device_uid(uid: Option<String>) -> Option<String> {
+    let uid = uid?;
+    let cleaned: String = uid
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .take(64)
+        .collect();
+    if cleaned.len() >= 8 {
+        Some(cleaned)
+    } else {
+        None
+    }
 }
 
 fn clean_device_name(name: Option<String>) -> String {
@@ -123,6 +140,7 @@ async fn pair(
     }
 
     let name = clean_device_name(request.device_name);
+    let uid = clean_device_uid(request.device_uid);
 
     if state.config.require_approval {
         let (tx, rx) = tokio::sync::oneshot::channel();
@@ -157,7 +175,7 @@ async fn pair(
         .sessions
         .lock()
         .unwrap()
-        .issue(&name, addr.ip(), true);
+        .issue(&name, uid.as_deref(), addr.ip(), true);
     {
         let mut prefs = state.prefs.lock().unwrap();
         if !prefs.known_devices.contains(&name) {
@@ -266,10 +284,22 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
 
     let layout = state.active_layout();
     let mut engine = MappingEngine::new(&layout);
+    let mut layout_list: Vec<crate::protocol::LayoutSummary> = state
+        .layouts
+        .values()
+        .map(|l| crate::protocol::LayoutSummary {
+            id: l.id.clone(),
+            name: l.name.clone(),
+            orientation: l.orientation,
+            output: l.output,
+        })
+        .collect();
+    layout_list.sort_by(|a, b| a.name.cmp(&b.name));
     let welcome = ServerMessage::Welcome {
         device_id: device.device_id.clone(),
         device_name: device.name.clone(),
         layout,
+        layouts: layout_list,
         server_version: SERVER_VERSION.to_string(),
         heartbeat_interval_ms: HEARTBEAT_INTERVAL_MS,
     };
