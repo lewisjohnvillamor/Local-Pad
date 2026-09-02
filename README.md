@@ -40,6 +40,14 @@ layout is switched to GBA live from the dashboard:
 | --- | --- | --- | --- |
 | ![Touchpad layout](docs/media/controller-touchpad.png) | ![Dual-stick layout](docs/media/controller-dualstick.png) | ![GBA layout](docs/media/controller-gba.png) | ![Air mouse layout](docs/media/controller-airmouse.png) |
 
+Layouts and preferences live on the phone too: the "Layouts" button
+switches profiles without touching the computer, and the gear button
+holds per-device pointer, scroll and vibration settings.
+
+| Layout picker | Settings |
+| --- | --- |
+| ![The phone's layout picker sheet](docs/media/controller-picker.png) | ![The phone's settings sheet](docs/media/controller-settings.png) |
+
 ## Usage
 
 1. **Start the server** on the computer:
@@ -55,18 +63,26 @@ layout is switched to GBA live from the dashboard:
 
 2. **Connect the phone.** Scan the QR code with the phone camera (it
    carries a single-use secret), or open the controller URL and type the
-   six digit code from the dashboard. Both expire after five minutes;
-   click "New code" for a fresh one.
+   six digit code from the dashboard. The dashboard counts the code down
+   live and offers a fresh one when it expires; click the QR to enlarge
+   it for scanning from across the room. Re-pairing the same phone
+   replaces its entry instead of listing it twice.
 
 3. **Pick a layout.** Tap "Layouts" on the phone or use the dashboard's
    layout grid; either side switches instantly. The phone's gear button
    holds pointer speed, scroll speed, scroll direction and vibration
-   preferences. `localpad profiles` lists layouts from the terminal.
+   preferences, remembered per device. `localpad profiles` lists layouts
+   from the terminal.
 
 4. **Trackpad gestures:** move with one finger, tap to click, two-finger
    drag to scroll, two-finger tap for right click, double-tap and hold to
-   drag. The keyboard layout adds a "tap to type" strip that uses the
-   phone's own keyboard.
+   drag (the pad shows when a drag is active). Buttons give a short
+   vibration where the browser supports it. The keyboard layout adds a
+   "tap to type" strip that uses the phone's own keyboard.
+
+   The controller goes fullscreen on the first touch. On iPhone, where
+   Safari does not allow that, add the page to the Home Screen (Share,
+   then Add to Home Screen) for the same effect.
 
 5. **Motion layouts** (air mouse, Dolphin, steering wheel) need one
    extra step the first time: install the LocalPad certificate on the
@@ -189,6 +205,8 @@ arrive as a full-gyro DSU pad.
   five wrong guesses. Attempts are rate-limited per IP. Only hashes of
   pairing secrets and session tokens are kept in memory.
 - Session tokens are 256-bit, scoped to one device and one server boot.
+  Re-pairing a device revokes its previous tokens, and at most eight
+  paired devices are remembered per boot.
 - Every frame is validated: protocol version, button mask, NaN/infinity
   rejection, range clamps, sequence ordering, size caps and rate limits.
   Keyboard input is restricted to an allowlisted set of key codes.
@@ -206,8 +224,8 @@ crates/localpad-cli           the `localpad` binary
 crates/localpad-output-enigo  macOS (CoreGraphics) and Windows (SendInput) output
 crates/localpad-output-linux  Linux uinput output
 crates/localpad-output-dsu    DSU (CemuHook) motion server
-web/                       React dashboard + controller (Vite, embedded at build)
-layouts/                   built-in controller layouts (JSON, schema v1)
+web/                          React dashboard + controller (Vite, embedded at build)
+layouts/                      built-in controller layouts (JSON, schema v1)
 ```
 
 ## Status and roadmap
