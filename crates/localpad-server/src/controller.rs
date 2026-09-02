@@ -148,7 +148,6 @@ async fn pair(
         state.approvals.lock().unwrap().insert(
             request_id,
             PendingApproval {
-                device_id_hint: request_id,
                 name: name.clone(),
                 ip: addr.ip(),
                 respond: tx,
@@ -175,14 +174,7 @@ async fn pair(
         .sessions
         .lock()
         .unwrap()
-        .issue(&name, uid.as_deref(), addr.ip(), true);
-    {
-        let mut prefs = state.prefs.lock().unwrap();
-        if !prefs.known_devices.contains(&name) {
-            prefs.known_devices.push(name.clone());
-            prefs.save(&state.data_dir);
-        }
-    }
+        .issue(&name, uid.as_deref(), addr.ip());
     state.broadcast(AdminEvent::Status);
     tracing::info!(device = %session.device_id, name = %name, ip = %addr.ip(), "device paired");
     Json(serde_json::json!({
@@ -276,7 +268,6 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
         state.sessions.lock().unwrap().active = Some(ActiveConnection {
             device_id: device.device_id.clone(),
             commands: command_tx.clone(),
-            connected_at: Instant::now(),
         });
     }
     state.broadcast(AdminEvent::Status);

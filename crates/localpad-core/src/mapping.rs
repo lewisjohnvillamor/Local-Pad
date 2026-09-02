@@ -66,8 +66,6 @@ enum StickTarget {
 const STICK_MOUSE_SPEED: f32 = 700.0;
 
 pub struct MappingEngine {
-    layout_id: String,
-    output_mode: OutputMode,
     buttons: BTreeMap<GamepadButton, ButtonTarget>,
     sticks: [StickTarget; 2],
     gyro: GyroTarget,
@@ -145,8 +143,6 @@ impl MappingEngine {
         }
 
         MappingEngine {
-            layout_id: layout.id.clone(),
-            output_mode: layout.output,
             buttons,
             sticks,
             gyro,
@@ -156,14 +152,6 @@ impl MappingEngine {
             held_keys: HashSet::new(),
             held_mouse: HashSet::new(),
         }
-    }
-
-    pub fn layout_id(&self) -> &str {
-        &self.layout_id
-    }
-
-    pub fn output_mode(&self) -> OutputMode {
-        self.output_mode
     }
 
     fn press_key(&mut self, key: Key, events: &mut Vec<OutputEvent>) {
@@ -400,8 +388,10 @@ mod tests {
     #[test]
     fn stick_threshold_maps_to_keys() {
         let mut engine = MappingEngine::new(&keyboard_layout());
-        let mut f = InputFrame::default();
-        f.left_stick = [0.0, -0.9];
+        let mut f = InputFrame {
+            left_stick: [0.0, -0.9],
+            ..Default::default()
+        };
         let (_, events) = engine.process_frame(&f, 0.016);
         assert_eq!(events, vec![OutputEvent::Key { key: Key::new("KeyW").unwrap(), down: true }]);
         f.left_stick = [0.0, 0.0];
@@ -463,12 +453,14 @@ mod tests {
         }))
         .unwrap();
         let mut engine = MappingEngine::new(&layout);
-        let mut f = InputFrame::default();
-        f.orientation = Some([0.0, 0.0, 0.0, 1.0]);
         // Turning right (yaw) at 90 deg/s should move the pointer left of
         // zero on x per our inversion convention, and only after smoothing
         // has something to follow.
-        f.angular_velocity = Some([0.0, 90.0, 0.0]);
+        let f = InputFrame {
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            angular_velocity: Some([0.0, 90.0, 0.0]),
+            ..Default::default()
+        };
         let (out, _) = engine.process_frame(&f, 0.016);
         assert!(out.mouse_delta[0] < 0.0, "yaw must drive x, got {:?}", out.mouse_delta);
         assert_eq!(out.mouse_delta[1], 0.0);

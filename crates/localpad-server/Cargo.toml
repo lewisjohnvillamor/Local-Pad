@@ -9,7 +9,6 @@ localpad-core = { path = "../localpad-core" }
 localpad-output-dsu = { path = "../localpad-output-dsu" }
 localpad-output-linux = { path = "../localpad-output-linux" }
 anyhow.workspace = true
-thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
@@ -18,7 +17,6 @@ rand.workspace = true
 axum = { version = "0.8", features = ["ws"] }
 axum-server = { version = "0.7", features = ["tls-rustls"] }
 rustls = { version = "0.23", features = ["ring"] }
-tower = "0.5"
 rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 mime_guess = "2"
 rcgen = { version = "0.13", features = ["pem", "x509-parser"] }

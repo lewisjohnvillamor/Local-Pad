@@ -267,7 +267,6 @@ function ConnectScreen({
     "needs-pairing": "not paired",
     pairing: "pairing...",
     connecting: "connecting...",
-    "waiting-approval": "waiting for approval on the computer",
     ended: "disconnected",
   };
 

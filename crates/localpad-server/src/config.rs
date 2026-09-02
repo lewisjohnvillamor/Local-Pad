@@ -63,9 +63,6 @@ impl ServerConfig {
 pub struct Preferences {
     #[serde(default)]
     pub last_profile: Option<String>,
-    /// Device names the user has paired before, for the dashboard history.
-    #[serde(default)]
-    pub known_devices: Vec<String>,
 }
 
 impl Preferences {

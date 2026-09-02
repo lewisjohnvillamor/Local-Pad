@@ -47,8 +47,6 @@ pub enum ServerMessage {
     },
     Layout { layout: Layout },
     HeartbeatAck { t: f64 },
-    /// The device is waiting for approval in the admin dashboard.
-    PendingApproval,
     Error { code: ErrorCode, message: String },
     Bye { reason: String },
 }
@@ -59,9 +57,6 @@ pub enum ErrorCode {
     AuthRequired,
     BadToken,
     Busy,
-    Denied,
-    BadMessage,
-    RateLimited,
 }
 
 /// Maximum accepted WebSocket message size in bytes.

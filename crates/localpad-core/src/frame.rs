@@ -92,9 +92,6 @@ impl Key {
         }
     }
 
-    pub fn code(&self) -> &str {
-        &self.0
-    }
 }
 
 /// Allowlist of key codes a phone may inject. Anything outside this list is
@@ -250,9 +247,6 @@ impl InputFrame {
         Ok(())
     }
 
-    pub fn is_pressed(&self, button: GamepadButton) -> bool {
-        self.buttons & button.bit() != 0
-    }
 }
 
 #[cfg(test)]

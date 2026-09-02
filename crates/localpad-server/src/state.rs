@@ -8,7 +8,7 @@ use std::sync::Mutex;
 use std::time::Instant;
 
 use anyhow::Context;
-use localpad_core::layout::{Layout, OutputMode};
+use localpad_core::layout::Layout;
 use localpad_core::mapping::OutputFrame;
 use serde::Serialize;
 use tokio::sync::{broadcast, oneshot, watch};
@@ -61,7 +61,6 @@ pub struct MonitorSnapshot {
 }
 
 pub struct PendingApproval {
-    pub device_id_hint: u32,
     pub name: String,
     pub ip: IpAddr,
     pub respond: oneshot::Sender<bool>,
@@ -267,7 +266,4 @@ impl AppState {
         }
     }
 
-    pub fn output_mode(&self) -> OutputMode {
-        self.outputs.lock().unwrap().mode()
-    }
 }
