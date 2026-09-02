@@ -22,7 +22,6 @@ export type Phase =
   | "needs-pairing"
   | "pairing"
   | "connecting"
-  | "waiting-approval"
   | "connected"
   | "ended";
 
@@ -187,14 +186,6 @@ export class ControllerSession {
 
   // ---- pairing ----
 
-  get hasToken(): boolean {
-    try {
-      return localStorage.getItem(TOKEN_KEY) !== null;
-    } catch {
-      return false;
-    }
-  }
-
   async pair(code: string): Promise<boolean> {
     this.update({ phase: "pairing", error: null });
     try {
@@ -293,9 +284,6 @@ export class ControllerSession {
           break;
         case "heartbeatAck":
           this.update({ latencyMs: Math.max(0, performance.now() - message.t) });
-          break;
-        case "pendingApproval":
-          this.update({ phase: "waiting-approval" });
           break;
         case "error":
           if (message.code === "bad_token") {

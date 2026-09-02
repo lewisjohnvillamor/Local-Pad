@@ -28,7 +28,6 @@ pub struct DeviceSession {
     pub uid: Option<String>,
     pub paired_at: Instant,
     pub last_ip: Option<IpAddr>,
-    pub approved: bool,
 }
 
 /// Most paired devices kept per boot; oldest are dropped beyond this.
@@ -40,13 +39,11 @@ pub struct DeviceSummary {
     pub device_id: String,
     pub name: String,
     pub connected: bool,
-    pub approved: bool,
 }
 
 pub struct ActiveConnection {
     pub device_id: String,
     pub commands: mpsc::Sender<ConnCommand>,
-    pub connected_at: Instant,
 }
 
 #[derive(Default)]
@@ -62,13 +59,7 @@ impl SessionMap {
     /// A device re-pairing with the same uid (or, lacking one, the same
     /// name) keeps its device identity: old tokens are revoked, not
     /// accumulated.
-    pub fn issue(
-        &mut self,
-        name: &str,
-        uid: Option<&str>,
-        ip: IpAddr,
-        approved: bool,
-    ) -> (String, DeviceSession) {
+    pub fn issue(&mut self, name: &str, uid: Option<&str>, ip: IpAddr) -> (String, DeviceSession) {
         let existing_id = self
             .by_token_hash
             .values()
@@ -109,7 +100,6 @@ impl SessionMap {
             uid: uid.map(str::to_string),
             paired_at: Instant::now(),
             last_ip: Some(ip),
-            approved,
         };
         self.by_token_hash
             .insert(hash_hex(token.as_bytes()), session.clone());
@@ -128,17 +118,6 @@ impl SessionMap {
         self.by_token_hash.get(&hash_hex(token.as_bytes())).cloned()
     }
 
-    pub fn approve(&mut self, device_id: &str) -> bool {
-        let mut found = false;
-        for session in self.by_token_hash.values_mut() {
-            if session.device_id == device_id {
-                session.approved = true;
-                found = true;
-            }
-        }
-        found
-    }
-
     pub fn revoke(&mut self, device_id: &str) {
         self.by_token_hash.retain(|_, s| s.device_id != device_id);
     }
@@ -154,7 +133,6 @@ impl SessionMap {
                 device_id: s.device_id.clone(),
                 name: s.name.clone(),
                 connected: connected_id.as_deref() == Some(&s.device_id),
-                approved: s.approved,
             })
             .collect();
         out.sort_by(|a, b| a.device_id.cmp(&b.device_id));
@@ -171,7 +149,7 @@ mod tests {
     fn token_authenticates_and_revokes() {
         let mut map = SessionMap::default();
         let ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
-        let (token, session) = map.issue("Ana's phone", None, ip, true);
+        let (token, session) = map.issue("Ana's phone", None, ip);
         let got = map.authenticate(&token).expect("token should authenticate");
         assert_eq!(got.device_id, session.device_id);
         assert!(map.authenticate("wrong-token").is_none());
@@ -180,30 +158,19 @@ mod tests {
     }
 
     #[test]
-    fn approval_flow() {
-        let mut map = SessionMap::default();
-        let ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
-        let (token, session) = map.issue("Pending phone", None, ip, false);
-        assert!(!map.authenticate(&token).unwrap().approved);
-        assert!(map.approve(&session.device_id));
-        assert!(map.authenticate(&token).unwrap().approved);
-        assert!(!map.approve("device-999"));
-    }
-
-    #[test]
     fn repairing_replaces_instead_of_duplicating() {
         let mut map = SessionMap::default();
         let ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
-        let (old_token, first) = map.issue("Ana's phone", Some("uid-1"), ip, true);
-        let (new_token, second) = map.issue("Ana's phone", Some("uid-1"), ip, true);
+        let (old_token, first) = map.issue("Ana's phone", Some("uid-1"), ip);
+        let (new_token, second) = map.issue("Ana's phone", Some("uid-1"), ip);
         assert_eq!(first.device_id, second.device_id, "same device keeps its id");
         assert!(map.authenticate(&old_token).is_none(), "old token revoked");
         assert!(map.authenticate(&new_token).is_some());
         assert_eq!(map.summaries().len(), 1);
 
         // Without uids, the name is the fallback identity.
-        let (_, a) = map.issue("Guest", None, ip, true);
-        let (_, b) = map.issue("Guest", None, ip, true);
+        let (_, a) = map.issue("Guest", None, ip);
+        let (_, b) = map.issue("Guest", None, ip);
         assert_eq!(a.device_id, b.device_id);
         assert_eq!(map.summaries().len(), 2);
     }
@@ -213,7 +180,7 @@ mod tests {
         let mut map = SessionMap::default();
         let ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
         for i in 0..(MAX_DEVICES + 3) {
-            let _ = map.issue(&format!("Phone {i}"), Some(&format!("uid-{i}")), ip, true);
+            let _ = map.issue(&format!("Phone {i}"), Some(&format!("uid-{i}")), ip);
         }
         let summaries = map.summaries();
         assert_eq!(summaries.len(), MAX_DEVICES);

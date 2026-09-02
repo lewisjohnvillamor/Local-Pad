@@ -130,12 +130,9 @@ impl MotionProcessor {
 
         let alpha = self.settings.smoothing.clamp(0.05, 1.0);
         let velocity = angular_velocity.unwrap_or([0.0; 3]);
-        for i in 0..3 {
-            let mut v = velocity[i];
-            if v.abs() < self.settings.dead_zone_dps {
-                v = 0.0;
-            }
-            self.smoothed_velocity[i] += alpha * (v - self.smoothed_velocity[i]);
+        for (smoothed, raw) in self.smoothed_velocity.iter_mut().zip(velocity) {
+            let v = if raw.abs() < self.settings.dead_zone_dps { 0.0 } else { raw };
+            *smoothed += alpha * (v - *smoothed);
         }
 
         Some(MotionSample {

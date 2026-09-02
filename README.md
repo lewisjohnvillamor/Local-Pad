@@ -71,10 +71,10 @@ holds per-device pointer, scroll and vibration settings.
    localpad serve
    ```
 
-   The admin dashboard opens in your browser. Add `--no-open` to skip
-   that, `--profile gba` to start on a different layout, or
-   `--require-approval` if you want to confirm every phone on the
-   dashboard before it can control anything.
+   The admin dashboard opens in your browser. The server resumes the
+   last used layout; add `--profile gba` to pick one explicitly,
+   `--no-open` to skip the browser, or `--require-approval` to confirm
+   every phone on the dashboard before it can control anything.
 
 2. **Connect the phone.** Scan the QR code with the phone camera (it
    carries a single-use secret), or open the controller URL and type the

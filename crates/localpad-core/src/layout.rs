@@ -171,8 +171,8 @@ impl Layout {
             if !in_range(control.x)
                 || !in_range(control.y)
                 || !in_range(control.size)
-                || !control.width.map_or(true, in_range)
-                || !control.height.map_or(true, in_range)
+                || !control.width.is_none_or(in_range)
+                || !control.height.is_none_or(in_range)
             {
                 return Err(LayoutError::BadGeometry(label));
             }

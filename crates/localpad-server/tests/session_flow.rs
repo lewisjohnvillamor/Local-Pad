@@ -65,7 +65,7 @@ async fn connect_ws(server: &localpad_server::RunningServer, token: &str) -> Soc
             .expect("ws connects");
     socket
         .send(Message::Text(
-            serde_json::json!({ "type": "auth", "token": token }).to_string().into(),
+            serde_json::json!({ "type": "auth", "token": token }).to_string(),
         ))
         .await
         .unwrap();
@@ -114,14 +114,13 @@ async fn pair_connect_input_disconnect() {
                 "buttons": 1u32 << 4,
                 "pointerDelta": [4.0, -1.0],
             })
-            .to_string()
-            .into(),
+            .to_string(),
         ))
         .await
         .unwrap();
     socket
         .send(Message::Text(
-            serde_json::json!({ "type": "heartbeat", "t": 12.5 }).to_string().into(),
+            serde_json::json!({ "type": "heartbeat", "t": 12.5 }).to_string(),
         ))
         .await
         .unwrap();
@@ -132,7 +131,7 @@ async fn pair_connect_input_disconnect() {
     // Clean goodbye frees the slot.
     socket
         .send(Message::Text(
-            serde_json::json!({ "type": "bye" }).to_string().into(),
+            serde_json::json!({ "type": "bye" }).to_string(),
         ))
         .await
         .unwrap();
@@ -167,7 +166,7 @@ async fn second_device_is_busy() {
     // The first connection is unaffected.
     first
         .send(Message::Text(
-            serde_json::json!({ "type": "heartbeat", "t": 1.0 }).to_string().into(),
+            serde_json::json!({ "type": "heartbeat", "t": 1.0 }).to_string(),
         ))
         .await
         .unwrap();

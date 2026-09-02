@@ -53,9 +53,9 @@ enum Command {
 
 #[derive(clap::Args)]
 struct ServeArgs {
-    /// Initial controller profile.
-    #[arg(long, default_value = "touchpad")]
-    profile: String,
+    /// Initial controller profile. Defaults to the last used profile.
+    #[arg(long)]
+    profile: Option<String>,
     /// Loopback admin port.
     #[arg(long, default_value_t = DEFAULT_ADMIN_PORT)]
     admin_port: u16,
@@ -171,13 +171,18 @@ fn serve(args: ServeArgs) -> anyhow::Result<()> {
     let layouts_dir = dir.join("layouts");
     let _ = std::fs::create_dir_all(&layouts_dir);
 
+    let profile = args
+        .profile
+        .or_else(|| localpad_server::config::Preferences::load(&dir).last_profile)
+        .unwrap_or_else(|| "touchpad".to_string());
+
     let mut config = ServerConfig {
         admin_port: args.admin_port,
         controller_port: args.controller_port,
         insecure_http: args.insecure_http,
         require_approval: args.require_approval,
         allow_remote: args.allow_remote,
-        profile: args.profile,
+        profile,
         layouts_dir: Some(layouts_dir),
         no_native_output: args.no_native_output,
         ..Default::default()

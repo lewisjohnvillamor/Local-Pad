@@ -80,7 +80,6 @@ export type ServerMessage =
     }
   | { type: "layout"; layout: Layout }
   | { type: "heartbeatAck"; t: number }
-  | { type: "pendingApproval" }
   | { type: "error"; code: string; message: string }
   | { type: "bye"; reason: string };
 
@@ -88,7 +87,6 @@ export interface DeviceSummary {
   deviceId: string;
   name: string;
   connected: boolean;
-  approved: boolean;
 }
 
 export interface StatusResponse {

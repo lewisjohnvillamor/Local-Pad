@@ -7,7 +7,6 @@ use std::net::IpAddr;
 pub struct NetworkInfo {
     pub lan_ip: IpAddr,
     pub all_ips: Vec<IpAddr>,
-    pub hostname: String,
 }
 
 pub fn is_private(ip: &IpAddr) -> bool {
@@ -34,12 +33,7 @@ pub fn discover() -> anyhow::Result<NetworkInfo> {
             }
         }
     }
-    let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "this computer".to_string());
-    Ok(NetworkInfo {
-        lan_ip,
-        all_ips,
-        hostname,
-    })
+    Ok(NetworkInfo { lan_ip, all_ips })
 }
 
 #[cfg(test)]
