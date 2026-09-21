@@ -1,4 +1,6 @@
-# LocalPad
+<p align="center">
+  <img src="docs/media/banner.png" width="840" alt="LocalPad: your phone as trackpad, keyboard, gamepad and air mouse">
+</p>
 
 Use your phone as a trackpad, keyboard, media remote, gamepad or motion
 controller for a computer on the same Wi-Fi network. One Rust process, no
