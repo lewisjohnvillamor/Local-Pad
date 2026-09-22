@@ -278,6 +278,11 @@ function ConnectScreen({
           Scan the QR code on the computer, or type the six digit code shown
           in the dashboard.
         </p>
+        {phase === "ended" && (
+          <button className="btn primary" onClick={() => session.retry()}>
+            Reconnect
+          </button>
+        )}
         {(phase === "needs-pairing" || phase === "ended") && (
           <>
             <div className="field">
@@ -297,14 +302,14 @@ function ConnectScreen({
               {error && <span className="error">{error}</span>}
             </div>
             <button
-              className="btn primary"
+              className={phase === "ended" ? "btn" : "btn primary"}
               disabled={!code.trim()}
               onClick={() => {
                 requestFullscreen();
                 void session.pair(code.trim());
               }}
             >
-              Connect
+              {phase === "ended" ? "Pair again with a new code" : "Connect"}
             </button>
           </>
         )}
