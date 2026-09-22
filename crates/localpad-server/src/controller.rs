@@ -203,6 +203,55 @@ async fn send_msg(socket: &mut WebSocket, msg: &ServerMessage) -> bool {
     }
 }
 
+/// Last line of defense: if the connection task unwinds for any reason
+/// before its normal cleanup runs, this guard still releases every native
+/// input and frees the controller slot. It tolerates poisoned locks so a
+/// panic elsewhere cannot leave keys held.
+struct ConnectionGuard {
+    state: Arc<AppState>,
+    device_id: String,
+    armed: bool,
+}
+
+impl ConnectionGuard {
+    fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+impl Drop for ConnectionGuard {
+    fn drop(&mut self) {
+        if !self.armed {
+            return;
+        }
+        tracing::warn!(
+            device = %self.device_id,
+            "connection task ended without cleanup; forcing input release"
+        );
+        {
+            let mut outputs = match self.state.outputs.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            let _ = outputs.release_all();
+        }
+        {
+            let mut sessions = match self.state.sessions.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            if sessions
+                .active
+                .as_ref()
+                .is_some_and(|a| a.device_id == self.device_id)
+            {
+                sessions.active = None;
+            }
+        }
+        self.state.broadcast(AdminEvent::Status);
+    }
+}
+
 async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketAddr) {
     // First message must authenticate within 5 seconds.
     let auth = tokio::time::timeout(Duration::from_secs(5), socket.recv()).await;
@@ -273,6 +322,12 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
     state.broadcast(AdminEvent::Status);
     tracing::info!(device = %device.device_id, ip = %addr.ip(), "controller connected");
 
+    let mut release_guard = ConnectionGuard {
+        state: state.clone(),
+        device_id: device.device_id.clone(),
+        armed: true,
+    };
+
     let layout = state.active_layout();
     let mut engine = MappingEngine::new(&layout);
     let mut layout_list: Vec<crate::protocol::LayoutSummary> = state
@@ -296,6 +351,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
     };
     if !send_msg(&mut socket, &welcome).await {
         cleanup(&state, &device.device_id, &mut engine).await;
+        release_guard.disarm();
         return;
     }
 
@@ -497,6 +553,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
 
     tracing::info!(device = %device.device_id, reason = %disconnect_reason, "controller disconnected");
     cleanup(&state, &device.device_id, &mut engine).await;
+    release_guard.disarm();
 }
 
 /// Release everything the engine holds and push the releases to outputs.

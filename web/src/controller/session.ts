@@ -39,6 +39,13 @@ export interface SessionView {
 
 const TOKEN_KEY = "localpad-token";
 const FRAME_INTERVAL_MS = 1000 / 60;
+/// Give up on silent reconnection after this many failed attempts
+/// (roughly fifteen seconds with the backoff) and tell the user instead.
+const MAX_RECONNECT_ATTEMPTS = 6;
+
+export const SERVER_UNREACHABLE_MESSAGE =
+  "Could not reach the LocalPad server. Check that it is still running " +
+  "and that this phone is on the same Wi-Fi.";
 
 function guessDeviceName(): string {
   const ua = navigator.userAgent;
@@ -79,6 +86,7 @@ export class ControllerSession {
   private heartbeatTimer: number | undefined;
   private reconnectTimer: number | undefined;
   private reconnectDelay = 500;
+  private reconnectAttempts = 0;
   private manualClose = false;
   private wakeLock: WakeLockSentinel | null = null;
 
@@ -267,6 +275,7 @@ export class ControllerSession {
       switch (message.type) {
         case "welcome":
           this.reconnectDelay = 500;
+          this.reconnectAttempts = 0;
           this.neutralizeLocal();
           this.update({
             phase: "connected",
@@ -312,6 +321,12 @@ export class ControllerSession {
     socket.onclose = () => {
       this.stopLoops();
       if (this.manualClose) return;
+      this.reconnectAttempts += 1;
+      if (this.reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+        // Spinning forever helps nobody; surface it and let the user retry.
+        this.update({ phase: "ended", error: SERVER_UNREACHABLE_MESSAGE });
+        return;
+      }
       this.update({ phase: "connecting" });
       this.reconnectTimer = window.setTimeout(() => {
         let token: string | null = null;
@@ -325,6 +340,14 @@ export class ControllerSession {
       }, this.reconnectDelay);
       this.reconnectDelay = Math.min(this.reconnectDelay * 2, 5000);
     };
+  }
+
+  /** Start over after the reconnect budget ran out or a goodbye. */
+  retry() {
+    window.clearTimeout(this.reconnectTimer);
+    this.reconnectAttempts = 0;
+    this.reconnectDelay = 500;
+    this.begin();
   }
 
   private send(message: ClientMessage) {
