@@ -24,7 +24,7 @@ use crate::protocol::{
     STALE_AFTER_MS,
 };
 use crate::sessions::{ActiveConnection, ConnCommand};
-use crate::state::{AdminEvent, AppState, MonitorSnapshot, PendingApproval, SERVER_VERSION};
+use crate::state::{AdminEvent, AppState, LockRecover, MonitorSnapshot, PendingApproval, SERVER_VERSION};
 
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
@@ -145,7 +145,7 @@ async fn pair(
     if state.config.require_approval {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let request_id = state.next_approval_id();
-        state.approvals.lock().unwrap().insert(
+        state.approvals.lock_recover().insert(
             request_id,
             PendingApproval {
                 name: name.clone(),
@@ -163,7 +163,7 @@ async fn pair(
             .ok()
             .and_then(|r| r.ok())
             .unwrap_or(false);
-        state.approvals.lock().unwrap().remove(&request_id);
+        state.approvals.lock_recover().remove(&request_id);
         if !approved {
             state.broadcast(AdminEvent::Status);
             return (StatusCode::FORBIDDEN, "the computer declined this device").into_response();
@@ -196,11 +196,18 @@ async fn input_ws(
         .on_upgrade(move |socket| input_socket(state, socket, addr))
 }
 
+/// A send that takes longer than this is a dead or badly stalled peer;
+/// waiting on it would also starve the watchdog that releases inputs.
+const SEND_TIMEOUT: Duration = Duration::from_secs(3);
+
 async fn send_msg(socket: &mut WebSocket, msg: &ServerMessage) -> bool {
-    match serde_json::to_string(msg) {
-        Ok(text) => socket.send(Message::Text(text.into())).await.is_ok(),
-        Err(_) => false,
-    }
+    let Ok(text) = serde_json::to_string(msg) else {
+        return false;
+    };
+    matches!(
+        tokio::time::timeout(SEND_TIMEOUT, socket.send(Message::Text(text.into()))).await,
+        Ok(Ok(()))
+    )
 }
 
 /// Last line of defense: if the connection task unwinds for any reason
@@ -229,17 +236,10 @@ impl Drop for ConnectionGuard {
             "connection task ended without cleanup; forcing input release"
         );
         {
-            let mut outputs = match self.state.outputs.lock() {
-                Ok(guard) => guard,
-                Err(poisoned) => poisoned.into_inner(),
-            };
-            let _ = outputs.release_all();
+            let _ = self.state.outputs.lock_recover().release_all();
         }
         {
-            let mut sessions = match self.state.sessions.lock() {
-                Ok(guard) => guard,
-                Err(poisoned) => poisoned.into_inner(),
-            };
+            let mut sessions = self.state.sessions.lock_recover();
             if sessions
                 .active
                 .as_ref()
@@ -274,7 +274,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
         }
         _ => return,
     };
-    let device = state.sessions.lock().unwrap().authenticate(&token);
+    let device = state.sessions.lock_recover().authenticate(&token);
     let Some(device) = device else {
         let _ = send_msg(
             &mut socket,
@@ -292,7 +292,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
     let (command_tx, mut command_rx) = mpsc::channel::<ConnCommand>(16);
     {
         let old = {
-            let sessions = state.sessions.lock().unwrap();
+            let sessions = state.sessions.lock_recover();
             sessions.active.as_ref().map(|a| (a.device_id.clone(), a.commands.clone()))
         };
         if let Some((old_id, old_commands)) = old {
@@ -314,7 +314,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
                 return;
             }
         }
-        state.sessions.lock().unwrap().active = Some(ActiveConnection {
+        state.sessions.lock_recover().active = Some(ActiveConnection {
             device_id: device.device_id.clone(),
             commands: command_tx.clone(),
         });
@@ -383,7 +383,14 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
                 }
                 if last_ping_sent.is_none() {
                     last_ping_sent = Some(Instant::now());
-                    let _ = socket.send(Message::Ping(Vec::new().into())).await;
+                    let sent = tokio::time::timeout(
+                        SEND_TIMEOUT,
+                        socket.send(Message::Ping(Vec::new().into())),
+                    )
+                    .await;
+                    if !matches!(sent, Ok(Ok(()))) {
+                        break "socket stalled".to_string();
+                    }
                 }
             }
             changed = shutdown.changed() => {
@@ -461,7 +468,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
                                 last_frame_at = Instant::now();
                                 let (out, events) = engine.process_frame(&frame, dt);
                                 {
-                                    let mut outputs = state.outputs.lock().unwrap();
+                                    let mut outputs = state.outputs.lock_recover();
                                     outputs.apply_events(&events);
                                     outputs.apply_frame(&out);
                                 }
@@ -490,7 +497,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
                                 match Key::new(&code) {
                                     Some(key) => {
                                         let events = engine.process_key(key, down);
-                                        state.outputs.lock().unwrap().apply_events(&events);
+                                        state.outputs.lock_recover().apply_events(&events);
                                     }
                                     None => {
                                         bad_messages += 1;
@@ -509,7 +516,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
                                 };
                                 if let Some(button) = button {
                                     let events = engine.process_mouse_button(button, down);
-                                    state.outputs.lock().unwrap().apply_events(&events);
+                                    state.outputs.lock_recover().apply_events(&events);
                                 }
                             }
                             ClientMessage::Neutral => apply_release(&state, &mut engine),
@@ -559,7 +566,7 @@ async fn input_socket(state: Arc<AppState>, mut socket: WebSocket, addr: SocketA
 /// Release everything the engine holds and push the releases to outputs.
 fn apply_release(state: &AppState, engine: &mut MappingEngine) {
     let events = engine.release_all();
-    let mut outputs = state.outputs.lock().unwrap();
+    let mut outputs = state.outputs.lock_recover();
     outputs.apply_events(&events);
     let _ = outputs.release_all();
 }
@@ -567,7 +574,7 @@ fn apply_release(state: &AppState, engine: &mut MappingEngine) {
 async fn cleanup(state: &Arc<AppState>, device_id: &str, engine: &mut MappingEngine) {
     apply_release(state, engine);
     {
-        let mut sessions = state.sessions.lock().unwrap();
+        let mut sessions = state.sessions.lock_recover();
         if sessions
             .active
             .as_ref()

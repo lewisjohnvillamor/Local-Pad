@@ -214,11 +214,26 @@ impl DsuOutput {
 
 fn receiver_loop(socket: UdpSocket, shared: Arc<Shared>) {
     let mut buf = [0u8; 128];
+    let mut consecutive_errors = 0u32;
     loop {
         let (len, addr) = match socket.recv_from(&mut buf) {
-            Ok(v) => v,
+            Ok(v) => {
+                consecutive_errors = 0;
+                v
+            }
             Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => continue,
-            Err(_) => return,
+            Err(e) => {
+                // Transient errors (ICMP unreachable on Windows, interface
+                // flaps) must not kill the receiver for the whole boot.
+                consecutive_errors += 1;
+                if consecutive_errors > 50 {
+                    tracing::error!(error = %e, "DSU receiver giving up after repeated errors");
+                    return;
+                }
+                tracing::warn!(error = %e, "DSU receive failed; retrying");
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                continue;
+            }
         };
         let Some((msg_type, _body)) = verify_packet(&buf[..len]) else {
             continue;
