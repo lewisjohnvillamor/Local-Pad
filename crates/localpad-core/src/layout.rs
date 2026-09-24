@@ -188,15 +188,15 @@ impl Layout {
                 ControlKind::Button if control.id.is_none() => {
                     return Err(LayoutError::BadControlId(label, "a unique id"));
                 }
-                ControlKind::Stick => {
-                    if !matches!(control.id.as_deref(), Some("left") | Some("right")) {
-                        return Err(LayoutError::BadControlId(label, "`left` or `right`"));
-                    }
+                ControlKind::Stick
+                    if !matches!(control.id.as_deref(), Some("left") | Some("right")) =>
+                {
+                    return Err(LayoutError::BadControlId(label, "`left` or `right`"));
                 }
-                ControlKind::Trigger => {
-                    if !matches!(control.id.as_deref(), Some("l2") | Some("r2")) {
-                        return Err(LayoutError::BadControlId(label, "`l2` or `r2`"));
-                    }
+                ControlKind::Trigger
+                    if !matches!(control.id.as_deref(), Some("l2") | Some("r2")) =>
+                {
+                    return Err(LayoutError::BadControlId(label, "`l2` or `r2`"));
                 }
                 _ => {}
             }

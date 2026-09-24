@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::assets;
 use crate::sessions::ConnCommand;
-use crate::state::{AdminEvent, AppState, SERVER_VERSION};
+use crate::state::{AdminEvent, AppState, LockRecover, SERVER_VERSION};
 
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
@@ -122,7 +122,7 @@ fn controller_url(state: &AppState) -> String {
 
 async fn status(State(state): State<Arc<AppState>>) -> Json<StatusResponse> {
     let (caps, mode, dsu_active, dsu_clients, warning) = {
-        let outputs = state.outputs.lock().unwrap();
+        let outputs = state.outputs.lock_recover();
         (
             outputs.capabilities(),
             outputs.mode(),
@@ -155,7 +155,7 @@ async fn status(State(state): State<Arc<AppState>>) -> Json<StatusResponse> {
         controller_url: controller_url(&state),
         secure: !state.config.insecure_http,
         require_approval: state.config.require_approval,
-        profile: state.active_profile.lock().unwrap().clone(),
+        profile: state.active_profile.lock_recover().clone(),
         output: OutputStatus {
             name: caps.name.to_string(),
             pointer: caps.pointer,
@@ -166,7 +166,7 @@ async fn status(State(state): State<Arc<AppState>>) -> Json<StatusResponse> {
             dsu_active,
             dsu_clients,
         },
-        devices: state.sessions.lock().unwrap().summaries(),
+        devices: state.sessions.lock_recover().summaries(),
         pairing,
         warnings,
     })
@@ -247,7 +247,7 @@ async fn disconnect(
     Json(request): Json<DisconnectRequest>,
 ) -> Json<serde_json::Value> {
     let commands = {
-        let sessions = state.sessions.lock().unwrap();
+        let sessions = state.sessions.lock_recover();
         sessions
             .active
             .as_ref()
@@ -262,7 +262,7 @@ async fn disconnect(
             .await;
     }
     if request.forget {
-        state.sessions.lock().unwrap().revoke(&request.device_id);
+        state.sessions.lock_recover().revoke(&request.device_id);
     }
     state.broadcast(AdminEvent::Status);
     Json(serde_json::json!({ "ok": true }))
@@ -279,7 +279,7 @@ async fn approval(
     State(state): State<Arc<AppState>>,
     Json(request): Json<ApprovalRequest>,
 ) -> Response {
-    let pending = state.approvals.lock().unwrap().remove(&request.request_id);
+    let pending = state.approvals.lock_recover().remove(&request.request_id);
     match pending {
         Some(p) => {
             let _ = p.respond.send(request.approve);

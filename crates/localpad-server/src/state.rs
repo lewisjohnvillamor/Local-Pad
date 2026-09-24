@@ -22,6 +22,18 @@ use crate::tls::TlsIdentity;
 
 pub const SERVER_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// Locking that survives poisoning: a panic elsewhere must never stop the
+/// server from reading state or, critically, releasing held inputs.
+pub trait LockRecover<T> {
+    fn lock_recover(&self) -> std::sync::MutexGuard<'_, T>;
+}
+
+impl<T> LockRecover<T> for Mutex<T> {
+    fn lock_recover(&self) -> std::sync::MutexGuard<'_, T> {
+        self.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
 /// Built-in layouts compiled into the binary from /layouts.
 const BUILTIN_LAYOUTS: &[&str] = &[
     include_str!("../../../layouts/touchpad.json"),
@@ -203,7 +215,7 @@ impl AppState {
     }
 
     pub fn active_layout(&self) -> Layout {
-        let profile = self.active_profile.lock().unwrap().clone();
+        let profile = self.active_profile.lock_recover().clone();
         self.layouts[&profile].clone()
     }
 
@@ -211,13 +223,13 @@ impl AppState {
     /// unknown id. Pushes the layout to the connected phone.
     pub async fn set_profile(&self, id: &str) -> Option<Layout> {
         let layout = self.layouts.get(id)?.clone();
-        *self.active_profile.lock().unwrap() = id.to_string();
+        *self.active_profile.lock_recover() = id.to_string();
         {
-            let mut prefs = self.prefs.lock().unwrap();
+            let mut prefs = self.prefs.lock_recover();
             prefs.last_profile = Some(id.to_string());
             prefs.save(&self.data_dir);
         }
-        self.outputs.lock().unwrap().set_mode(layout.output);
+        self.outputs.lock_recover().set_mode(layout.output);
         let commands = self
             .sessions
             .lock()
@@ -234,17 +246,17 @@ impl AppState {
 
     /// Begin a fresh pairing session and return what to display.
     pub async fn new_pairing(&self, controller_url: &str) -> PairingDisplay {
-        let (_, display) = self.pairing.lock().unwrap().begin(controller_url);
+        let (_, display) = self.pairing.lock_recover().begin(controller_url);
         self.broadcast(AdminEvent::Status);
         display
     }
 
     pub fn pairing_display(&self) -> Option<PairingDisplay> {
-        self.pairing.lock().unwrap().display()
+        self.pairing.lock_recover().display()
     }
 
     pub fn next_approval_id(&self) -> u32 {
-        let mut counter = self.approval_counter.lock().unwrap();
+        let mut counter = self.approval_counter.lock_recover();
         *counter += 1;
         *counter
     }
@@ -261,8 +273,8 @@ impl AppState {
         if let Some(commands) = commands {
             let _ = commands.send(ConnCommand::ReleaseAll).await;
         }
-        if let Ok(mut outputs) = self.outputs.lock() {
-            let _ = outputs.release_all();
+        {
+            let _ = self.outputs.lock_recover().release_all();
         }
     }
 

@@ -31,13 +31,22 @@ fn rand_suffix() -> u64 {
         .subsec_nanos() as u64
 }
 
+/// The listener binds 0.0.0.0, but Windows refuses to connect to that
+/// address, so tests always dial loopback at the bound port.
+fn connect_addr(server: &localpad_server::RunningServer) -> std::net::SocketAddr {
+    std::net::SocketAddr::new(
+        std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
+        server.controller_addr.port(),
+    )
+}
+
 async fn pair(server: &localpad_server::RunningServer) -> (String, String) {
     pair_named(server, "Test phone").await
 }
 
 async fn pair_named(server: &localpad_server::RunningServer, name: &str) -> (String, String) {
     let display = server.state.new_pairing("http://test/controller").await;
-    let addr = server.controller_addr;
+    let addr = connect_addr(server);
     let body = serde_json::json!({ "code": display.code, "deviceName": name });
     let response = tokio::task::spawn_blocking(move || {
         ureq::post(&format!("http://{addr}/api/pair"))
@@ -60,7 +69,7 @@ type Socket = tokio_tungstenite::WebSocketStream<
 
 async fn connect_ws(server: &localpad_server::RunningServer, token: &str) -> Socket {
     let (mut socket, _) =
-        tokio_tungstenite::connect_async(format!("ws://{}/ws", server.controller_addr))
+        tokio_tungstenite::connect_async(format!("ws://{}/ws", connect_addr(server)))
             .await
             .expect("ws connects");
     socket
@@ -194,7 +203,7 @@ async fn same_device_reconnect_replaces_old_connection() {
 async fn expired_pairing_code_is_refused() {
     let server = start_test_server().await;
     let _ = server.state.new_pairing("http://test/controller").await;
-    let addr = server.controller_addr;
+    let addr = connect_addr(&server);
     let status = tokio::task::spawn_blocking(move || {
         match ureq::post(&format!("http://{addr}/api/pair"))
             .send_json(serde_json::json!({ "code": "000-000" }))
